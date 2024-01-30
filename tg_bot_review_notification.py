@@ -23,11 +23,8 @@ def request_long_polling(timestamp, devman_token):
 
 def prepare_text_for_tlg_message(response, task_name):
     if response['new_attempts'][0]['is_negative']:
-        text = f'Задание "{task_name}" проверено и направлено на доработку!'
-        return text
-    elif not response['new_attempts'][0]['is_negative']:
-        text = f'Задание "{task_name}" выполнено'
-        return text
+        return f'Задание "{task_name}" проверено и направлено на доработку!'
+    return f'Задание "{task_name}" выполнено'
 
 
 def send_message_on_server_reply(response, bot, chat_id):
@@ -39,11 +36,8 @@ def send_message_on_server_reply(response, bot, chat_id):
 
 def update_timestamp_for_next_request(response):
     if response['status'] == 'found':
-        timestamp = str(response['last_attempt_timestamp'])
-        return timestamp
-    elif response['status'] == 'timeout':
-        timestamp = str(response['timestamp_to_request'])
-        return timestamp
+        return str(response['last_attempt_timestamp'])
+    return str(response['timestamp_to_request'])
 
 
 def launch_bot():
