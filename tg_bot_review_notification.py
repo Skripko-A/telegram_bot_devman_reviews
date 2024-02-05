@@ -13,7 +13,7 @@ def set_cli_args(default_chat_id):
     return parser
 
 
-def request_long_polling(timestamp, devman_token):
+def get_devman_reviews(timestamp, devman_token):
     url = 'https://dvmn.org/api/long_polling/'
     headers = {'Authorization': f'Token {devman_token}', 'timestamp': timestamp}
     response = requests.get(url, headers=headers, timeout=90)
@@ -49,13 +49,12 @@ def launch_bot():
     cli_args = set_cli_args(default_chat_id=default_chat_id).parse_args()
     chat_id = cli_args.chat_id
 
-    response = request_long_polling(devman_token=devman_token, timestamp=None)
+    response = get_devman_reviews(devman_token=devman_token, timestamp=None)
     send_message_on_server_reply(response=response, bot=bot, chat_id=chat_id)
     timestamp = update_timestamp_for_next_request(response=response)
-    while timestamp:
-        response = request_long_polling(devman_token=devman_token, timestamp=timestamp)
-        send_message_on_server_reply(response=response, bot=bot, chat_id=chat_id)
-        update_timestamp_for_next_request(response=response)
+    response = get_devman_reviews(devman_token=devman_token, timestamp=timestamp)
+    send_message_on_server_reply(response=response, bot=bot, chat_id=chat_id)
+    update_timestamp_for_next_request(response=response)
 
 
 if __name__ == '__main__':
