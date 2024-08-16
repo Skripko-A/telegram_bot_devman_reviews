@@ -45,9 +45,7 @@ class TelegramLogsHandler(logging.Handler):
         self.chat_id = chat_id
     def emit(self, record):
         log_entry = self.format(record)
-        bot = self.bot
-        chat_id = self.chat_id
-        bot.send_message(text=log_entry, chat_id=chat_id)
+        self.bot.send_message(text=log_entry, chat_id=self.chat_id)
 
 
 def alarm():
@@ -69,21 +67,17 @@ def main():
     logger.addHandler(TelegramLogsHandler(bot, default_chat_id))
     params = {}
     logger.info('Бот запущен')
-    while True:
-        try:
+    try:
+        while True:
             response = get_devman_reviews(devman_token=devman_token, params=params)
             if response['status'] == 'found':
                 params['timestamp'] = str(response['last_attempt_timestamp'])
                 send_message_on_server_reply(response=response, bot=bot, chat_id=chat_id)
-        except requests.exceptions.ReadTimeout as timeout_error:
-            logging.error(timeout_error)
-            logger.error(traceback.format_exc())
-        except requests.exceptions.ConnectionError as connection_error:
-            logging.error(connection_error)
-            time.sleep(5)
-        finally:
-            logger.critical('Бот остановлен')
-            alarm()
+    except Exception:
+        alarm()
+    finally:
+        alarm()
+
 
 
 if __name__ == '__main__':
