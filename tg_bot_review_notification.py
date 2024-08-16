@@ -1,9 +1,10 @@
 import argparse
-import logging
 import os
+import logging
+import time
 import traceback
-
 from dotenv import load_dotenv
+
 import telegram
 import requests
 
@@ -66,18 +67,18 @@ def main():
     logger.addHandler(TelegramLogsHandler(bot, default_chat_id))
     params = {}
     logger.info('Бот запущен')
-    try:
-        while True:
+    while True:
+        try:
             response = get_devman_reviews(devman_token=devman_token, params=params)
             if response['status'] == 'found':
                 params['timestamp'] = str(response['last_attempt_timestamp'])
                 send_message_on_server_reply(response=response, bot=bot, chat_id=chat_id)
-    except Exception:
-        alarm()
-    finally:
-        alarm()
-
-
+        except requests.exceptions.ReadTimeout as timeout_error:
+            logging.error(timeout_error)
+            logger.error(timeout_error)
+        except requests.exceptions.ConnectionError as connection_error:
+            logging.error(connection_error)
+            time.sleep(5)
 
 if __name__ == '__main__':
     main()
