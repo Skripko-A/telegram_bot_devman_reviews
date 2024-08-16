@@ -70,6 +70,7 @@ def main():
                 send_message_on_server_reply(response=response, bot=bot, chat_id=chat_id)
         except requests.exceptions.ReadTimeout as timeout_error:
             logging.error(timeout_error)
+            logger.error(timeout_error)
         except requests.exceptions.ConnectionError as connection_error:
             logging.error(connection_error)
             time.sleep(5)
