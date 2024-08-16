@@ -21,7 +21,7 @@ def set_cli_args(default_chat_id):
 def get_devman_reviews(devman_token, params):
     url = 'https://dvmn.org/api/long_polling/'
     headers = {'Authorization': f'Token {devman_token}'}
-    response = requests.get(url, headers=headers, params=params, timeout=300)
+    response = requests.get(url, headers=headers, params=params, timeout=100)
     response.raise_for_status()
     return response.json()
 
