@@ -21,7 +21,7 @@ def set_cli_args(default_chat_id):
 def get_devman_reviews(devman_token, params):
     url = 'https://dvmn.org/api/long_polling/'
     headers = {'Authorization': f'Token {devman_token}'}
-    response = requests.get(url, headers=headers, params=params, timeout=90)
+    response = requests.get(url, headers=headers, params=params, timeout=300)
     response.raise_for_status()
     return response.json()
 
@@ -48,11 +48,6 @@ class TelegramLogsHandler(logging.Handler):
         self.bot.send_message(text=log_entry, chat_id=self.chat_id)
 
 
-def alarm():
-    logger.error('Бот упал с ошибкой:')
-    logger.error(traceback.format_exc())
-
-
 def main():
     load_dotenv()
     devman_token = os.environ['DEVMAN_TOKEN']
@@ -75,10 +70,13 @@ def main():
                 send_message_on_server_reply(response=response, bot=bot, chat_id=chat_id)
         except requests.exceptions.ReadTimeout as timeout_error:
             logging.error(timeout_error)
-            logger.error(timeout_error)
         except requests.exceptions.ConnectionError as connection_error:
             logging.error(connection_error)
             time.sleep(5)
+        except Exception:
+            logger.error('Бот упал с ошибкой:')
+            logger.error(traceback.format_exc())
+
 
 if __name__ == '__main__':
     main()
