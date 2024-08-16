@@ -1,13 +1,15 @@
 import argparse
 import os
-import time
-from itertools import chain
-
-import requests
-import telegram
 import logging
+import time
+import traceback
 from dotenv import load_dotenv
 
+import telegram
+import requests
+
+
+logger = logging.getLogger('bot_logger')
 
 def set_cli_args(default_chat_id):
     parser = argparse.ArgumentParser(description='Check for task updates')
@@ -48,19 +50,25 @@ class TelegramLogsHandler(logging.Handler):
         bot.send_message(text=log_entry, chat_id=chat_id)
 
 
+def alarm():
+    logger.error('Бот упал с ошибкой:')
+    logger.error(traceback.format_exc())
+
+
 def main():
     load_dotenv()
     devman_token = os.environ['DEVMAN_TOKEN']
     tg_bot_token = os.environ['TG_BOT_TOKEN']
     default_chat_id = os.environ['TG_USER_CHAT_ID']
     bot = telegram.Bot(tg_bot_token)
+
     cli_args = set_cli_args(default_chat_id=default_chat_id).parse_args()
     chat_id = cli_args.chat_id
-    logger = logging.getLogger('bot_logger')
+
     logger.setLevel(logging.INFO)
     logger.addHandler(TelegramLogsHandler(bot, default_chat_id))
     params = {}
-    logger.info('bot started')
+    logger.info('Бот запущен')
     while True:
         try:
             response = get_devman_reviews(devman_token=devman_token, params=params)
@@ -69,13 +77,14 @@ def main():
                 send_message_on_server_reply(response=response, bot=bot, chat_id=chat_id)
         except requests.exceptions.ReadTimeout as timeout_error:
             logging.error(timeout_error)
+            logger.error(traceback.format_exc())
         except requests.exceptions.ConnectionError as connection_error:
             logging.error(connection_error)
             time.sleep(5)
         finally:
-            logger.critical('bot is stopped')
+            logger.critical('Бот остановлен')
+            alarm()
+
 
 if __name__ == '__main__':
-
     main()
-
