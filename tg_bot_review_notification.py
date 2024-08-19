@@ -21,20 +21,20 @@ def set_cli_args(default_chat_id):
 def get_devman_reviews(devman_token, params):
     url = 'https://dvmn.org/api/long_polling/'
     headers = {'Authorization': f'Token {devman_token}'}
-    response = requests.get(url, headers=headers, params=params, timeout=100)
+    response = requests.get(url, headers=headers, params=params, timeout=2)
     response.raise_for_status()
     return response.json()
 
 
-def prepare_text_for_tlg_message(response, task_name):
+def prepare_message_text(response, task_name):
     if response['new_attempts'][0]['is_negative']:
         return f'Задание "{task_name}" проверено и направлено на доработку!'
     return f'Задание "{task_name}" выполнено'
 
 
-def send_message_on_server_reply(response, bot, chat_id):
+def send_message(response, bot, chat_id):
     task_name = response['new_attempts'][0]['lesson_title']
-    text = prepare_text_for_tlg_message(response=response, task_name=task_name)
+    text = prepare_message_text(response=response, task_name=task_name)
     bot.send_message(text=text, chat_id=chat_id)
 
 
@@ -46,6 +46,7 @@ class TelegramLogsHandler(logging.Handler):
     def emit(self, record):
         log_entry = self.format(record)
         self.bot.send_message(text=log_entry, chat_id=self.chat_id)
+
 
 
 def main():
@@ -64,12 +65,11 @@ def main():
     logger.info('Бот запущен')
     while True:
         try:
-            response = get_devman_reviews(devman_token=devman_token, params=params)
-            if response['status'] == 'found':
-                params['timestamp'] = str(response['last_attempt_timestamp'])
-                send_message_on_server_reply(response=response, bot=bot, chat_id=chat_id)
+            reviews_json = get_devman_reviews(devman_token=devman_token, params=params)
+            if reviews_json['status'] == 'found':
+                params['timestamp'] = str(reviews_json['last_attempt_timestamp'])
+                send_message(response=reviews_json, bot=bot, chat_id=chat_id)
         except requests.exceptions.ReadTimeout as timeout_error:
-            logging.error(timeout_error)
             logger.error(timeout_error)
         except requests.exceptions.ConnectionError as connection_error:
             logging.error(connection_error)
