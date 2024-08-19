@@ -65,10 +65,10 @@ def main():
     logger.info('Бот запущен')
     while True:
         try:
-            reviews_json = get_devman_reviews(devman_token=devman_token, params=params)
-            if reviews_json['status'] == 'found':
-                params['timestamp'] = str(reviews_json['last_attempt_timestamp'])
-                send_message(response=reviews_json, bot=bot, chat_id=chat_id)
+            reviews = get_devman_reviews(devman_token=devman_token, params=params)
+            if reviews['status'] == 'found':
+                params['timestamp'] = str(reviews['last_attempt_timestamp'])
+                send_message(response=reviews, bot=bot, chat_id=chat_id)
         except requests.exceptions.ReadTimeout as timeout_error:
             logger.error(timeout_error)
         except requests.exceptions.ConnectionError as connection_error:
